@@ -2,6 +2,7 @@ package com.company;
 import java.util.ArrayList;
 
 public class Cloth {
+    static Cloth[][] memo;
     int width;
     int height;
     int x;
@@ -24,17 +25,17 @@ public class Cloth {
         this.value = -1;
     }
 
-    public ArrayList<Cloth> cut(int cut, boolean isWidthCut) {
-        ArrayList<Cloth> ret = new ArrayList<Cloth>;
-        if(isWidthCut) {
-            ret.add(new Cloth(this.getWidth() - cut, this.getHeight(), cut, this.getY()));
-            ret.add(new Cloth(cut, this.getHeight(), this.getX(), this.getY()));
-        } else {
-            ret.add(new Cloth(this.getWidth(), this.getHeight() - cut, cut, this.getX()));
-            ret.add(new Cloth(this.getWidth(), cut, this.getX(), this.getY()));
-        }
-        return ret;
+    public ArrayList<Cloth> CreateCuts(ArrayList<Patern> paterns) {
+        ArrayList<Cloth> ret = new ArrayList<Cloth>();
+        for(int w = 1; w <= this.width; w++) {
+            for(int h = 1; h<= this.height; h++) {
+                if(memo[w][h] != null) {
 
+                } else {
+                    ret.add(memo[w][h]);
+                }
+            }
+        }
     }
 
 
@@ -52,5 +53,11 @@ public class Cloth {
 
     public int getY() {
         return y;
+    }
+    public int getValue() {
+        return this.value;
+    }
+    public void setValue(int x) {
+        value = x;
     }
 }
