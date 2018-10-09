@@ -2,7 +2,6 @@ package com.company;
 import java.util.ArrayList;
 
 public class Cloth {
-    static Cloth[][] memo;
     int width;
     int height;
     int x;
@@ -25,17 +24,32 @@ public class Cloth {
         this.value = -1;
     }
 
-    public ArrayList<Cloth> CreateCuts(ArrayList<Patern> paterns) {
-        ArrayList<Cloth> ret = new ArrayList<Cloth>();
-        for(int w = 1; w <= this.width; w++) {
-            for(int h = 1; h<= this.height; h++) {
-                if(memo[w][h] != null) {
-
-                } else {
-                    ret.add(memo[w][h]);
-                }
+    public ArrayList<Cloth[]> PosibleCuts(ArrayList<Patern> paterns){
+        ArrayList<Cloth[]> possibleCuts = new ArrayList<Cloth[]>();
+        int Wmax = this.getWidth();
+        int Hmax = this.getHeight();
+        Patern p = Patern.getSmallestPatern();
+        for (int x = 1; x < Wmax; x++){
+            Cloth a = new Cloth(Wmax - x, Hmax,this.getX() + x, this.getY());
+            Cloth b = new Cloth(x, Hmax, this.getX(), this.getY());
+            if(p.fits(a) || p.fits(b)) {
+                Cloth[] cuts = new Cloth[2];
+                cuts[0] = a;
+                cuts[1] = b;
+                possibleCuts.add(cuts);
             }
         }
+        for(int y = 1; y < Hmax; y++) {
+            Cloth a = new Cloth(Wmax, Hmax - y, this.getX(), this.getY() + y);
+            Cloth b = new Cloth(Wmax, y, this.getX(), this.getY());
+            if(p.fits(a) || p.fits(b)) {
+                Cloth[] cuts = new Cloth[2];
+                cuts[0] = a;
+                cuts[1] = b;
+                possibleCuts.add(cuts);
+            }
+        }
+        return possibleCuts;
     }
 
 
@@ -54,10 +68,12 @@ public class Cloth {
     public int getY() {
         return y;
     }
-    public int getValue() {
-        return this.value;
+
+    public void setValue(int val) {
+        this.value = val;
     }
-    public void setValue(int x) {
-        value = x;
+
+    public int getValue() {
+        return value;
     }
 }
