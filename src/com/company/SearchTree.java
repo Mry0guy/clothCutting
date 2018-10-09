@@ -29,20 +29,33 @@ public class SearchTree {
         }
     }
 
-    public ArrayList<nodeReturn> ToSolvedArray()throws InterruptedException, ExecutionException{
-        ArrayList<nodeReturn> Buffer = new ArrayList<nodeReturn>();
-        TreeBufferPack(Buffer, head.evaluate().get());
+    public ArrayList<nodeReturn> ToSolvedArray(){
+        ArrayList<nodeReturn> Buffer = new ArrayList<>();
+        try{
+            nodeReturn solved = head.evaluate().get();
+            TreeBufferPack(Buffer,solved);
+        } catch(Exception e){
+            System.err.println("the evaluation thread has crashed within the solution");
+        };
+
         return Buffer;
     }
 
-    private void TreeBufferPack(ArrayList<nodeReturn> Buffer, nodeReturn n) throws InterruptedException, ExecutionException{
-        nodeReturn L = n.getNodes()[0].evaluate().get();
-        nodeReturn R = n.getNodes()[1].evaluate().get();
-        if(L != null && R != null) {
+    private void TreeBufferPack(ArrayList<nodeReturn> Buffer, nodeReturn n) {
+        try{
+            nodeReturn L = n.getNodes()[0].evaluate().get();
+            nodeReturn R = n.getNodes()[1].evaluate().get();
             Buffer.add(L);
             Buffer.add(R);
             TreeBufferPack(Buffer, L);
             TreeBufferPack(Buffer, R);
+            return;
+        } catch (NullPointerException e){
+            return;
+        }catch (InterruptedException e){
+            return;
+        }catch (ExecutionException e) {
+            return;
         }
     }
 
@@ -102,7 +115,7 @@ public class SearchTree {
                     }
                 }
                 if(Best != null) {
-                    maxPair = new nodeReturn(null, Best.getVal());
+                    maxPair = new nodeReturn(null, Best.getVal(), Best);
                 } else {
                     maxPair = new nodeReturn(null, 0);
                 }

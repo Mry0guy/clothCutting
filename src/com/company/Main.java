@@ -1,4 +1,6 @@
 package com.company;
+import javax.swing.*;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.TreeSet;
 
@@ -13,8 +15,10 @@ class clothCutting {
         paterns.add(new Patern(6,10,14, 'c'));
         SearchTree search = new SearchTree(top, paterns);
         search.Search(paterns);
-
-
-
+        JPanel j = new ClothGraphics(search.ToSolvedArray());
+        JFrame f = new JFrame("Cloth Cutting");
+        f.setSize(200, 200);
+        f.add(j);
+        f.setVisible(true);
     }
 }

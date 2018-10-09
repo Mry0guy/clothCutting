@@ -3,12 +3,15 @@ package com.company;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.awt.Color;
+import java.util.Random;
 
 public class Patern {
     int width;
     int height;
     int value;
     char symbol;
+    Color color;
     static Patern smallestPatern;
     static ArrayList<Patern> paterns = new ArrayList<Patern>();
 
@@ -23,7 +26,13 @@ public class Patern {
         this.height = height;
         this.value = value;
         this.symbol = symbol;
+        Random rand = new Random();
+        color = new Color(rand.nextInt(255), rand.nextInt(255), rand.nextInt(255));
         this.paterns.add(this);
+    }
+
+    public Color getColor() {
+        return color;
     }
 
     public int getWidth() {
@@ -37,6 +46,10 @@ public class Patern {
     }
     public char getSym() {
         return this.symbol;
+    }
+
+    public static void ClearPaterns(){
+        paterns = new ArrayList<>();
     }
 
     public static int getSmallestSide() {
