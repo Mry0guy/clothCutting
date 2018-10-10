@@ -28,7 +28,7 @@ public class Patern {
         this.symbol = symbol;
         Random rand = new Random();
         color = new Color(rand.nextInt(255), rand.nextInt(255), rand.nextInt(255));
-        this.paterns.add(this);
+        paterns.add(this);
     }
 
     public Color getColor() {
@@ -44,6 +44,7 @@ public class Patern {
     public int getVal() {
         return this.value;
     }
+    public int getValue(){return this.value;}
     public char getSym() {
         return this.symbol;
     }
@@ -85,11 +86,7 @@ public class Patern {
     }
 
     public boolean fits(Cloth c) {
-        if((this.getWidth() <= c.getHeight() && this.getHeight() <= c.getWidth()) || (this.getWidth() <= c.getWidth() && this.getHeight() <= c.getHeight())) {
-            return true;
-        } else {
-            return false;
-        }
+        return (this.getWidth() <= c.getHeight() && this.getHeight() <= c.getWidth()) || (this.getWidth() <= c.getWidth() && this.getHeight() <= c.getHeight());
     }
 }
  class sizeCompare implements Comparator<Patern> {

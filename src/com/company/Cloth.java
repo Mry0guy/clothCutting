@@ -30,22 +30,22 @@ public class Cloth {
         int Hmax = this.getHeight();
         Patern p = Patern.getSmallestPatern();
         for (int x = 1; x < Wmax; x++){
-            Cloth a = new Cloth(Wmax - x, Hmax,this.getX() + x, this.getY());
-            Cloth b = new Cloth(x, Hmax, this.getX(), this.getY());
+            Cloth a = new Cloth(Wmax - x, Hmax, x, 0);
+            Cloth b = new Cloth(x, Hmax, 0, 0);
             if(p.fits(a) || p.fits(b)) {
                 Cloth[] cuts = new Cloth[2];
-                cuts[0] = a;
-                cuts[1] = b;
+                cuts[1] = a;
+                cuts[0] = b;
                 possibleCuts.add(cuts);
             }
         }
         for(int y = 1; y < Hmax; y++) {
-            Cloth a = new Cloth(Wmax, Hmax - y, this.getX(), this.getY() + y);
-            Cloth b = new Cloth(Wmax, y, this.getX(), this.getY());
+            Cloth a = new Cloth(Wmax, Hmax - y, 0, y);
+            Cloth b = new Cloth(Wmax, y, 0, 0);
             if(p.fits(a) || p.fits(b)) {
                 Cloth[] cuts = new Cloth[2];
-                cuts[0] = a;
-                cuts[1] = b;
+                cuts[1] = a;
+                cuts[0] = b;
                 possibleCuts.add(cuts);
             }
         }

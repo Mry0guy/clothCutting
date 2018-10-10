@@ -1,8 +1,7 @@
 package com.company;
-import java.lang.reflect.Array;
+
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.ListIterator;
 import java.util.concurrent.*;
 
 
@@ -16,7 +15,7 @@ public class SearchTree {
         this.head = new node(head);
         this.memo = new node[head.getWidth()+1][head.getHeight()+1];
         this.evaluationMemo = new FutureTask[head.getWidth()+1][head.getHeight()+1];
-        this.pool = Executors.newCachedThreadPool();
+        pool = Executors.newCachedThreadPool();
     }
 
     public void Search(ArrayList<Patern> paterns) {
@@ -33,22 +32,33 @@ public class SearchTree {
         ArrayList<nodeReturn> Buffer = new ArrayList<>();
         try{
             nodeReturn solved = head.evaluate().get();
-            TreeBufferPack(Buffer,solved);
+            TreeBufferPack(Buffer,solved, new int[]{0,0});
         } catch(Exception e){
             System.err.println("the evaluation thread has crashed within the solution");
-        };
+        }
 
         return Buffer;
     }
 
-    private void TreeBufferPack(ArrayList<nodeReturn> Buffer, nodeReturn n) {
+    private void TreeBufferPack(ArrayList<nodeReturn> Buffer, nodeReturn n, int[] cords) {
         try{
             nodeReturn L = n.getNodes()[0].evaluate().get();
             nodeReturn R = n.getNodes()[1].evaluate().get();
-            Buffer.add(L);
-            Buffer.add(R);
-            TreeBufferPack(Buffer, L);
-            TreeBufferPack(Buffer, R);
+            if(n.getOrientaion()){
+                L.addCord(cords);
+                R.addCord(new int[]{cords[0], cords[1] + n.getNodes()[0].getData().getHeight()});
+                Buffer.add(L);
+                Buffer.add(R);
+                TreeBufferPack(Buffer, L, cords);
+                TreeBufferPack(Buffer, R, new int[]{cords[0], cords[1] + n.getNodes()[0].getData().getHeight()});
+            } else {
+                L.addCord(cords);
+                R.addCord(new int[]{cords[0] + n.getNodes()[0].getData().getWidth(), cords[1]});
+                Buffer.add(L);
+                Buffer.add(R);
+                TreeBufferPack(Buffer, L, cords);
+                TreeBufferPack(Buffer, R, new int[]{cords[0] + n.getNodes()[0].getData().getWidth(), cords[1]});
+            }
             return;
         } catch (NullPointerException e){
             return;
@@ -62,21 +72,32 @@ public class SearchTree {
     public class nodeReturn {
         private node[] nodes;
         private int value;
-        private Patern[] p;
+        private Patern p;
+        private ArrayList<int[]> cords;
+        private boolean vertical;
 
         nodeReturn(node[] nodes, int value) {
-            nodes = nodes;
-            value = value;
+            this.nodes = nodes;
+            this.value = value;
+            this.cords = new ArrayList<>();
 
         }
         nodeReturn(node[] nodes, int value, Patern p) {
-            nodes = nodes;
-            value = value;
-            p = p;
-
+            this.nodes = nodes;
+            this.value = value;
+            this.p = p;
+            this.cords = new ArrayList<>();
         }
 
-        public Patern[] getPaterns() {
+        public void  setOrientation(boolean b){
+            vertical = b;
+        }
+
+        public boolean getOrientaion(){
+            return vertical;
+        }
+
+        public Patern getPaterns() {
             return p;
         }
 
@@ -86,6 +107,14 @@ public class SearchTree {
 
         public node[] getNodes() {
             return nodes;
+        }
+
+        public ArrayList<int[]> getCords(){
+            return cords;
+        }
+
+        public void addCord(int[] cord) {
+            this.cords.add(cord);
         }
     }
 
@@ -105,6 +134,7 @@ public class SearchTree {
 
         public nodeReturn call() {
             nodeReturn maxPair = null;
+            //Base Case: The node is only large enough for one pattern
             if (children.size() == 0) {
                 Iterator<Patern> p = Patern.getValueIterator();
                 Patern Best = null;
@@ -115,62 +145,62 @@ public class SearchTree {
                     }
                 }
                 if(Best != null) {
-                    maxPair = new nodeReturn(null, Best.getVal(), Best);
+                    maxPair = new nodeReturn(null, Best.getValue(), Best);
+                    if(Best.getWidth() <= this.cloth.getWidth()){
+                        maxPair.setOrientation(true);
+                    } else {
+                        maxPair.setOrientation(false);
+                    }
                 } else {
                     maxPair = new nodeReturn(null, 0);
                 }
 
-            } else {
-                int maxPairValue = 0;
+            } else { // Recursive Case: the node has possible children
+                int maxPairValue = -1;
                 for (int i = 0; i < children.size(); i++) {
                     node[] nextNodes = children.get(i);
+                    boolean vertical = true;
+                    if(nextNodes[0].getData().getX() == nextNodes[1].getData().getX()){
+                        vertical = false;
+                    }
                     try {
                         nodeReturn value0, value1;
-                        if (evaluationMemo[nextNodes[0].getData().getWidth()][nextNodes[0].getData().getHeight()] == null) {
-                            FutureTask<nodeReturn> f0 = nextNodes[0].evaluate();
-                            evaluationMemo[nextNodes[0].getData().getWidth()][nextNodes[0].getData().getHeight()] = f0;
-                            value0 = f0.get();
-                        } else {
-                            value0 = (nodeReturn) evaluationMemo[nextNodes[0].getData().getWidth()][nextNodes[0].getData().getHeight()].get();
-                        }
-                        if (evaluationMemo[nextNodes[1].getData().getWidth()][nextNodes[1].getData().getHeight()] == null) {
-                            FutureTask<nodeReturn> f1 = nextNodes[1].evaluate();
-                            evaluationMemo[nextNodes[1].getData().getWidth()][nextNodes[1].getData().getHeight()] = f1;
-                            value1 = f1.get();
-                        } else {
-                            value1 = (nodeReturn) evaluationMemo[nextNodes[1].getData().getWidth()][nextNodes[1].getData().getHeight()].get();
+                        value0 = nextNodes[0].evaluate().get();
+                        value1 = nextNodes[1].evaluate().get();
+                        if(value0 == null){
+                            System.out.printf("W:%d H:%d\n",this.cloth.getWidth(), this.cloth.getHeight());
                         }
                         int value = value0.getValue() + value1.getValue();
                         if (maxPairValue < value) {
                             maxPair = new nodeReturn(nextNodes, value);
+                            maxPair.setOrientation(vertical);
                             maxPairValue = value;
                         }
                     } catch (Exception e) {
                         System.err.println(e);
-                        maxPair = new nodeReturn(null, -1);
+                        maxPair = new nodeReturn(null, 0);
                     }
 
                 }
             }
+            System.out.printf("resolved: w: %d h: %d v:%d\n", this.cloth.getWidth(), this.cloth.getHeight(), maxPair.getValue());
             return maxPair;
         }
     }
 
     public class node {
         private Cloth data;
-        private ArrayList<node> parents;
+        private ArrayList<int[]> locations;
         private ArrayList<node[]> children;
 
         node(node parent, Cloth data) {
             this.data = data;
-            this.parents = new ArrayList<node>();
-            this.parents.add(parent);
+            this.locations = new ArrayList<>();
             this.children = new ArrayList<node[]>();
         }
 
         node(Cloth head) {
             this.data = head;
-            this.parents = null;
             this.children = new ArrayList<node[]>();
         }
 
@@ -182,16 +212,13 @@ public class SearchTree {
             this.children.add(data);
         }
 
-        public void addParent(node parent) {
-            this.parents.add(parent);
-        }
-
         public FutureTask<nodeReturn> evaluate() {
             if(evaluationMemo[this.data.getWidth()][this.data.getHeight()] == null) {
                 valueCallable r = new valueCallable(this.children, this.data);
                 FutureTask<nodeReturn> f = new FutureTask<>(r);
                 ExecutorService pool = SearchTree.getThreadPool();
                 pool.execute(f);
+                evaluationMemo[this.getData().getWidth()][this.getData().getHeight()] = f;
                 return f;
             } else {
                 return evaluationMemo[this.data.getWidth()][this.data.getHeight()];

@@ -4,6 +4,7 @@ package com.company;
 
 import javax.swing.*;
 import java.awt.*;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -12,82 +13,82 @@ public class ClothGraphics extends JPanel {
     int height;
     ArrayList<SearchTree.nodeReturn> data;
     public Color BACKGROUND = Color.GREEN;
-
     public Color CUT_COLOR = Color.BLACK;
+    int scalar;
 
-    public ClothGraphics(ArrayList<SearchTree.nodeReturn> n){
+    public ClothGraphics(ArrayList<SearchTree.nodeReturn> n, int width, int height, int scalar){
+        this.scalar = scalar;
         data = n;
-        SearchTree.node[] top = n.get(0).getNodes();
-        if(top[0].getData().getWidth() == top[1].getData().getWidth()) {
-            this.width = top[0].getData().getWidth();
-            this.height = top[0].getData().getHeight() + top[1].getData().getHeight();
-        } else if (top[0].getData().getHeight() == top[1].getData().getHeight()){
-            this.width = top[0].getData().getWidth() + top[1].getData().getWidth();
-            this.height = top[0].getData().getHeight();
-        } else {
-            System.err.println("wrong shape output");
-        }
-        setPreferredSize(new Dimension(width, height));
+        this.width = width;
+        this.height = height;
+        setPreferredSize(new Dimension(width * scalar, height * scalar));
     }
 
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         g.setColor(BACKGROUND);
+        g.fillRect(0,0, width * scalar, height * scalar);
         Iterator<SearchTree.nodeReturn> paintIterator = data.listIterator();
         while(paintIterator.hasNext()){
             SearchTree.nodeReturn paint = paintIterator.next();
             if(paint.getNodes() == null){
                 paternPaint(paint, g);
-            } else {
+            }
+        }
+        paintIterator = data.listIterator();
+        while (paintIterator.hasNext()){
+            SearchTree.nodeReturn paint = paintIterator.next();
+            if(paint.getNodes() != null){
                 cutPaint(paint, g);
             }
         }
     }
 
     public void paternPaint(SearchTree.nodeReturn nodes, Graphics g){
-        Patern p[] = nodes.getPaterns();
-        SearchTree.node drawLocation[] = nodes.getNodes();
-        if(p[0] != null){
-            g.setColor(p[0].getColor());
-            g.drawRect(
-                    drawLocation[0].getData().getX(),
-                    drawLocation[0].getData().getY(),
-                    drawLocation[0].getData().getWidth(),
-                    drawLocation[0].getData().getHeight()
-            );
-        }
-        if(p[1] != null){
-            g.setColor(p[1].getColor());
-            g.drawRect(
-                    drawLocation[1].getData().getX(),
-                    drawLocation[1].getData().getY(),
-                    drawLocation[1].getData().getWidth(),
-                    drawLocation[1].getData().getHeight()
-            );
+        ArrayList<int[]> drawLocation = nodes.getCords();
+        Patern p = nodes.getPaterns();
+        g.setColor(p.getColor());
+        Iterator<int[]> drawIter = drawLocation.listIterator();
+        while (drawIter.hasNext()) {
+            int[] d = drawIter.next();
+            if(nodes.getOrientaion()) {
+                g.fillRect(d[0] * scalar, d[1] * scalar, p.getWidth() * scalar, p.getHeight() * scalar);
+                System.out.printf("PATTERN: x: %d y: %d w: %d h: %d\n", d[0], d[1], p.getWidth(), p.getHeight());
+            } else {
+                g.fillRect(d[0] * scalar, d[1] * scalar, p.getHeight() * scalar, p.getWidth() * scalar);
+                System.out.printf("PATTERN: x: %d y: %d w: %d h: %d\n", d[0], d[1], p.getWidth(), p.getHeight());
+            }
         }
     }
 
     public void cutPaint(SearchTree.nodeReturn nodes, Graphics g){
         SearchTree.node[] searchNode = nodes.getNodes();
-        if(searchNode[0].getData().getWidth() == searchNode[1].getData().getWidth()) {
-            g.setColor(CUT_COLOR);
-            g.drawLine(
-                    searchNode[0].getData().getX(),
-                    searchNode[0].getData().getHeight(),
-                    searchNode[0].getData().getX() + searchNode[0].getData().getWidth(),
-                    searchNode[0].getData().getHeight()
-            );
-        } else if (searchNode[0].getData().getHeight() == searchNode[1].getData().getHeight()){
-            g.setColor(CUT_COLOR);
-            g.drawLine(
-                    searchNode[0].getData().getWidth(),
-                    searchNode[0].getData().getY(),
-                    searchNode[0].getData().getWidth(),
-                    searchNode[0].getData().getY() + searchNode[0].getData().getHeight()
-            );
-        } else {
-            System.err.println("wrong shape output");
+        ArrayList<int[]> drawLocation = nodes.getCords();
+        Iterator<int[]> drawIter = drawLocation.listIterator();
+        while (drawIter.hasNext()){
+            int[] d = drawIter.next();
+            if(!nodes.getOrientaion()) {
+                g.setColor(CUT_COLOR);
+                g.drawLine(
+                        d[0]* scalar,
+                        (d[1] + searchNode[0].getData().getHeight())* scalar,
+                        (d[0]+ searchNode[0].getData().getWidth()) * scalar,
+                        (d[1] + searchNode[0].getData().getHeight()) * scalar
+                );
+                System.out.printf("CUT: x1: %d y1: %d x2: %d y2: %d\n", d[0], (d[1] + searchNode[0].getData().getHeight()), (d[0]+ searchNode[0].getData().getWidth()),(d[1] + searchNode[0].getData().getHeight()));
+            } else if (searchNode[0].getData().getHeight() == searchNode[1].getData().getHeight()){
+                g.setColor(CUT_COLOR);
+                g.drawLine(
+                        (d[0] + searchNode[0].getData().getWidth()) * scalar,
+                        d[1] * scalar,
+                        (d[0] +searchNode[0].getData().getWidth()) * scalar,
+                        (d[1] + searchNode[0].getData().getHeight()) * scalar
+                );
+                System.out.printf("CUT: x1: %d y1: %d x2: %d y2: %d\n", (d[0] + searchNode[0].getData().getWidth()), d[1], (d[0] +searchNode[0].getData().getWidth()),(d[1] + searchNode[0].getData().getHeight()));
+            } else {
+                System.err.println("wrong shape output");
+            }
         }
     }
 }
